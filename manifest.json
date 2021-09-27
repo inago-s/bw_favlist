@@ -1,0 +1,38 @@
+{
+    "name": "BW連載お気に入りチェック",
+    "description": "BOOK WALKER読み放題の連載お気に入りを管理できます．",
+    "version": "1.0",
+    "manifest_version": 3,
+    "action":{
+        "default_icon": {
+            "16": "icon/extention-icon-16.png",
+            "32": "icon/extention-icon-32.png",
+            "48": "icon/extention-icon-48.png",
+            "128": "icon/extention-icon-128.png"
+        },
+        "default_title":"BW連載お気に入りチェック",
+        "default_popup":"html/popup.html"
+    },
+    "content_scripts": [
+        {
+          "matches": ["https://viewer-subscription.bookwalker.jp/*"],
+          "css": ["css/style.css"],
+          "js": ["js/jquery-3.6.0.min.js","js/content-script.js"]
+        }
+    ],
+    "permissions": [
+        "contextMenus",
+        "scripting",
+        "tabs",
+        "storage",
+        "webNavigation",
+        "management"
+    ],
+    "host_permissions":[
+        "https://bookwalker.jp/*"
+    ],
+    "background": {
+        "service_worker": "js/background.js"
+    },
+    "author": "i175s"
+}

@@ -1,0 +1,40 @@
+.popup{
+	min-width: 200px;
+	min-height: 300px;
+}
+
+.ex-area{
+	width: 40px;
+	float: left;
+}
+
+.ex-book-status-read {
+    background: #7d7d7b;
+	text-align: center;
+}
+
+.ex-book-status-unread {
+    background: #619f4d;
+	text-align: center;
+}
+
+.ex-book-status{
+	padding: 0px 5px;
+    font-size: 76.92308%;
+	text-align: center;
+    font-family: "メイリオ",Meiryo,"Lucida Grande","Hiragino Kaku Gothic Pro","ヒラギノ角ゴ Pro W3","ＭＳ Ｐゴシック",Arial,sans-serif;
+    color: #fff;
+}
+
+.ex-fav-area {
+	text-align: center;
+	font-size:1.5rem;
+	color:gray;
+	margin-top: 10px;
+}
+
+.ex-fav{
+	margin-top: 0px;
+	margin-bottom: -10px;
+	color:#ffd700;
+}
