@@ -175,7 +175,8 @@ function read_content(params, book, store) {
 		request.onsuccess = function () {
 			let cursor = request.result;
 			if (cursor) {
-				cursor.value.history.push(book);
+				if (!cursor.value.history.includes(book))
+					cursor.value.history.push(book);
 				let updateRequest = cursor.update(cursor.value);
 				updateRequest.onsuccess = function () {
 					console.log('update success');
