@@ -2,23 +2,30 @@ $(function () {
 	let params = new URLSearchParams(location.search);
 	let content_URL = 'https://bookwalker.jp/de' + params.get('cid');
 	chrome.runtime.sendMessage({ msg: "get-series", URL: content_URL }, (response) => {
+		CONTENT_RELEASE = response.release;
+		CONTENT_LIMIT = Date(response.limit.slice(0, -2));
 		CONTENT_SERIES = response.series;
-		CONTENT_LIMIT = Date(response.limit.slice(0, -2))
+		CONTENT_LATEST = response.latest;
+		CONTENT_MAGAZINE = response.magazine_flag;
 	});
 
 	// 目次を押したとき
 	$('#showTableOfContents').on('click', function () {
-		if (!location.hostname.includes('viewer-subscription')) {
-			return;
-		}
-		$("#tableOfContents").children('.ex-area').remove();
-		let title = normalize_str($('title').text());
 		setTimeout(function () {
+			let page = $('#pageSliderCounter').text().split('/');
+			page_late = (page[0] / page[1]);
+			let scrollheight = $('#tableOfContents').get(0).scrollHeight - $("#tableOfContents").outerHeight();
+			$('#tableOfContents').scrollTop(scrollheight * page_late);
+			if (!location.hostname.includes('viewer-subscription') || !CONTENT_MAGAZINE) {
+				return;
+			}
+
+			$("#tableOfContents").children('.ex-area').remove();
+			let title = normalize_str($('title').text());
 			let content = $("#tableOfContents").children('.item');
 			let index = 0;
 			read_title(index, title, content, read_title);
 		}, 50);
-
 	});
 
 	//お気に入りボタン押したとき
@@ -72,7 +79,6 @@ function read_title(index, title, content, callback) {
 	}
 	chrome.runtime.sendMessage({ msg: "get-title", content: content[index].textContent, series: CONTENT_SERIES }, (response) => {
 		if (response) {
-			console.log(title);
 			// extensionエリア
 			let ex_area = document.createElement('div');
 			ex_area.className = 'ex-area';
@@ -131,3 +137,14 @@ function normalize_str(str) {
 
 	return str;
 }
+
+chrome.runtime.onMessage.addListener(
+	function (request, sender, sendResponse) {
+		if (request.msg == "user-add") {
+			let title = $('title').text();
+			chrome.runtime.sendMessage({ msg: "fav", book: title, content: request.content, series: CONTENT_SERIES });
+			chrome.runtime.sendMessage({ msg: "read", book: title, content: request.content, series: CONTENT_SERIES });
+			sendResponse('お気に入りに追加しました．');
+		}
+	}
+);
