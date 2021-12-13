@@ -1,14 +1,23 @@
 $(function () {
-	let params = new URLSearchParams(location.search);
-	let content_URL = 'https://bookwalker.jp/de' + params.get('cid');
-	chrome.runtime.sendMessage({ msg: "get-series", URL: content_URL }, (response) => {
-		CONTENT_RELEASE = response.release;
-		CONTENT_LIMIT = Date(response.limit.slice(0, -2));
-		CONTENT_SERIES = response.series;
-		CONTENT_LATEST = response.latest;
-		CONTENT_MAGAZINE = response.magazine_flag;
-	});
+	if (location.hostname.includes('viewer-subscription')) {
+		let params = new URLSearchParams(location.search);
+		let content_URL = 'https://bookwalker.jp/de' + params.get('cid');
+		chrome.runtime.sendMessage({ msg: "get-series", URL: content_URL }, (response) => {
+			CONTENT_RELEASE = response.release;
+			CONTENT_LIMIT = Date(response.limit.slice(0, -2));
+			CONTENT_SERIES = response.series;
+			CONTENT_LATEST = response.latest;
+			CONTENT_MAGAZINE = response.magazine_flag;
+		});
+	}
 
+	if (location.href.includes('bookwalker.jp/de')) {
+		$('.m-text-collapse').removeClass('collapse');
+		$('.js-text-collapse').removeClass('on');
+		$('.js-text-collapse').addClass('off');
+		$('.js-summary-collapse__toggle-btn').removeClass('on');
+		$('.js-summary-collapse__toggle-btn').addClass('off');
+	}
 	// 目次を押したとき
 	$('#showTableOfContents').on('click', function () {
 		setTimeout(function () {
@@ -19,7 +28,6 @@ $(function () {
 			if (!location.hostname.includes('viewer-subscription') || !CONTENT_MAGAZINE) {
 				return;
 			}
-
 			$("#tableOfContents").children('.ex-area').remove();
 			let title = normalize_str($('title').text());
 			let content = $("#tableOfContents").children('.item');
@@ -77,8 +85,9 @@ function read_title(index, title, content, callback) {
 	if (!(index < content.length)) {
 		return;
 	}
-	chrome.runtime.sendMessage({ msg: "get-title", content: content[index].textContent, series: CONTENT_SERIES }, (response) => {
+	chrome.runtime.sendMessage({ msg: "get-content", content: content[index].textContent, series: CONTENT_SERIES }, (response) => {
 		if (response) {
+			console.log('response');
 			// extensionエリア
 			let ex_area = document.createElement('div');
 			ex_area.className = 'ex-area';
@@ -136,6 +145,63 @@ function normalize_str(str) {
 	}).replace(/[‐－―]/g, "-").replace(/[～〜]/g, "~").replace(/　/g, " ");
 
 	return str;
+}
+
+function top_page(index, title, content, callback) {
+	if (!(index < content.length)) {
+		return;
+	}
+
+	chrome.runtime.sendMessage({ msg: "get-content", content: content[index].textContent, series: CONTENT_SERIES }, (response) => {
+		if (response) {
+			// extensionエリア
+			let ex_area = document.createElement('div');
+			ex_area.className = 'ex-area';
+
+			// favブロック
+			let fav_block = document.createElement('div');
+			fav_block.className = 'ex-fav-area ex-fav';
+
+			// favicon
+			fav_block.append('★');
+
+			// extentionエリアにfavブロックを挿入
+			ex_area.appendChild(fav_block);
+
+			// お気に入り作品の読書状況エリア
+			let status = document.createElement('div');
+			if (response.history.includes(title)) {
+				status.classList.add('ex-book-status', 'ex-book-status-read');
+				status.textContent = "既読";
+				ex_area.appendChild(status);
+			} else {
+				status.classList.add('ex-book-status', 'ex-book-status-unread');
+				status.textContent = "未読";
+				ex_area.appendChild(status);
+			}
+
+			// itemクラスの前にextensionエリアの挿入
+			content[index].before(ex_area);
+		} else {
+			// extensionエリア
+			let ex_area = document.createElement('div');
+			ex_area.className = 'ex-area';
+
+			// favブロック
+			let fav_block = document.createElement('div');
+			fav_block.className = 'ex-fav-area';
+
+			// favicon
+			fav_block.append('★');
+
+			// extentionエリアにfavブロックを挿入
+			ex_area.appendChild(fav_block);
+
+			// itemクラスの前にextensionエリアの挿入
+			content[index].before(ex_area);
+		}
+		callback(++index, title, content, read_title);
+	})
 }
 
 chrome.runtime.onMessage.addListener(
